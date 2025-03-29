@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+#include "PatternTemplates.h"
 
 using namespace std;
 
@@ -63,7 +65,7 @@ Sloth::Sloth(): SevenDeadlySins("sloth", 7, "blue")
 
 Sloth::~Sloth()
 {
-    wcout << "Очищение..." << endl;
+    wcout << "Очищение от лени..." << endl;
 }
 
 void Sloth::PrintSin() const
@@ -93,7 +95,7 @@ Wrath::Wrath(): SevenDeadlySins("wrath", 7, "red")
 
 Wrath::~Wrath()
 {
-    wcout << "Очищение..." << endl;
+    wcout << "Очищение от гнева..." << endl;
 }
 
 void Wrath::PrintSin() const
@@ -119,7 +121,7 @@ public:
     }
     ~Envy()
     {
-    wcout << "Очищение..." << endl;
+    wcout << "Очищение от зависти..." << endl;
     }
     void PrintSin() const
     {
@@ -129,24 +131,109 @@ public:
 };
 
 
+// Лабораторная 2
+
+
+enum class DeadlySinType : int
+{
+    Sloth = 1,
+    Wrath = 2,
+    Envy = 3
+};
+
+SevenDeadlySins *CreateDeadlySin (DeadlySinType CinSin)
+{
+    SevenDeadlySins *newDeadlySin = NULL;
+    if (CinSin == DeadlySinType::Sloth)
+    {
+        newDeadlySin = new Sloth;
+    }
+    if (CinSin == DeadlySinType::Wrath)
+    {
+        newDeadlySin = new Wrath;
+    }
+    if (CinSin == DeadlySinType::Envy)
+    {
+        newDeadlySin = new Envy;
+    }
+    return newDeadlySin;
+}
+
+void PrintColourIterator(Iterator<SevenDeadlySins*> *sinsIter)
+{
+    for(sinsIter->FirstSin(); !sinsIter->LastSin(); sinsIter->NextSin())
+    {
+        SevenDeadlySins *topSin = sinsIter->GetSin();
+        topSin->PrintColour();
+    }
+}
 int main()
 {
     setlocale(LC_ALL, "Russian");
-    SevenDeadlySins DeadlySin("greed", 7, "yellow");
-    DeadlySin.PrintNumberOfSins();
-    DeadlySin.PrintSin();
-    Wrath WrathSin;
-    WrathSin.PrintSin();
-    Envy EnvySin;
-    EnvySin.PrintSin();
-    EnvySin.~Envy();
-    Sloth SlothSin;
-    SlothSin.PrintSin();
-    SlothSin.SetSinColour("cyan");
-    SevenDeadlySins *newDeadlySin = new Sloth;
+//    SevenDeadlySins DeadlySin("greed", 7, "yellow");
+//    DeadlySin.PrintNumberOfSins();
+//    DeadlySin.PrintSin();
+//    Wrath WrathSin;
+//    WrathSin.PrintSin();
+//    Envy EnvySin;
+//    EnvySin.PrintSin();
+//    EnvySin.~Envy();
+//    Sloth SlothSin;
+//    SlothSin.PrintSin();
+//    SlothSin.SetSinColour("cyan");
+//    SevenDeadlySins *newDeadlySin = new Sloth;
+//    newDeadlySin->PrintSin();
+//    newDeadlySin->SetSinColour("cyan");
+//    delete newDeadlySin;
+    wcout << "Какой грех вы хотите создать?(Лень - 1, Гнев - 2, Зависть - 3)" << endl;
+    int i;
+    cin >> i;
+    DeadlySinType in;
+    in = static_cast<DeadlySinType>(i);
+    SevenDeadlySins *newDeadlySin = CreateDeadlySin(in);
     newDeadlySin->PrintSin();
-    newDeadlySin->SetSinColour("cyan");
     delete newDeadlySin;
-    wcout << "Да откуда их тут столько" << endl;
+    size_t N;
+    cout << endl;
+    wcout << "Введите количество грехов" << endl;
+    cin >> N;
+    ArrayClass<Sloth> SlothArray;
+    for(size_t i = 0; i<N; i++)
+    {
+        Sloth newSloth;
+        SlothArray.AddAndJump(newSloth);
+    }
+    wcout << "Размер массива лени: " << SlothArray.Size() << endl;
+    Iterator<Sloth> *slothIter = new ArrayIterator(&SlothArray);
+    for(slothIter->FirstSin(); !slothIter->LastSin(); slothIter->NextSin())
+    {
+        Sloth abc = slothIter->GetSin();
+        abc.PrintSin();
+    }
+    ArrayClass<SevenDeadlySins*> DeadlySinsArray;
+    for(size_t i = 0; i<N; i++)
+    {
+        int randNum = rand()%3+1;
+        DeadlySinType type = static_cast<DeadlySinType>(randNum);
+        SevenDeadlySins *newDeadlySin2 = CreateDeadlySin(type);
+        DeadlySinsArray.AddAndJump(newDeadlySin2);
+    }
+    wcout << "Размер массива грехов: " << DeadlySinsArray.Size() << endl;
+    Iterator<SevenDeadlySins*> *sinsIter = new ArrayIterator(&DeadlySinsArray);
+    PrintColourIterator(sinsIter);
+    delete sinsIter;
+    cout << endl;
+    VectorClass<SevenDeadlySins*> DeadlySinsVector;
+    for(size_t i = 0; i<N; i++)
+    {
+        int randNum = rand()%3+1;
+        DeadlySinType type = static_cast<DeadlySinType>(randNum);
+        SevenDeadlySins *newDeadlySin3 = CreateDeadlySin(type);
+        DeadlySinsVector.PushAndJump(newDeadlySin3);
+    }
+    wcout << "Размер вектора грехов: " << DeadlySinsVector.Size() << endl;
+    Iterator<SevenDeadlySins*> *sinsIter2 = new VectorIterator(&DeadlySinsVector);
+    PrintColourIterator(sinsIter2);
+    delete sinsIter2;
     return 0;
 }
