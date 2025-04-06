@@ -5,7 +5,7 @@
 
 using namespace std;
 
-const size_t MaxSize = 5;
+const size_t MaxSize = 7;
 
 template<typename DS>
 class Iterator
@@ -17,6 +17,60 @@ public:
     virtual void NextSin() {};
     virtual bool LastSin() const {};
     virtual DS GetSin() const {};
+};
+
+template<typename DS>
+class ArrayIterator : public Iterator<DS>
+{
+private:
+    const DS *ArraySins;
+    size_t Position;
+    size_t ArraySize;
+public:
+    ArrayIterator(DS *SinsSins, size_t arraySize) : ArraySins(SinsSins), ArraySize(arraySize), Position(0) {}
+    void FirstSin()
+    {
+        Position = 0;
+    }
+    void NextSin()
+    {
+        Position++;
+    }
+    bool LastSin() const override
+    {
+        return (Position >= ArraySize);
+    }
+    DS GetSin() const
+    {
+        return ArraySins[Position];
+    }
+};
+
+template<typename DS>
+class VectorIterator : public Iterator<DS>
+{
+private:
+    const DS *VectorSins;
+    size_t Position;
+    size_t VectorSize;
+public:
+    VectorIterator(DS *SinsSins, size_t vectorSize) : VectorSins(SinsSins), VectorSize(vectorSize), Position(0) {}
+    void FirstSin()
+    {
+        Position = 0;
+    }
+    void NextSin()
+    {
+        Position++;
+    }
+    bool LastSin() const
+    {
+        return (Position >= VectorSize);
+    }
+    DS GetSin() const
+    {
+        return VectorSins[Position];
+    }
 };
 
 template <typename DS>
@@ -37,6 +91,10 @@ public:
     DS GetSin(size_t i) const
     {
         return Sins[i];
+    }
+    class Iterator<DS> *GetIterator()
+    {
+        return new ArrayIterator(Sins, ArraySize);
     }
     ArrayClass() : ArraySize(0) {}
 };
@@ -61,59 +119,61 @@ public:
     {
         return Sins[i];
     }
+    class Iterator<DS> *GetIterator()
+    {
+        return new VectorIterator(Sins, VectorSize);
+    }
     VectorClass() : VectorSize(0) {}
 };
 
-template<typename DS>
-class ArrayIterator : public Iterator<DS>
+template <typename DS>
+class Decorator : public Iterator<DS>
 {
-private:
-    const ArrayClass<DS> *ArraySins;
-    size_t Position;
+protected:
+    Iterator<DS> *SinsIterator;
 public:
-    ArrayIterator(ArrayClass<DS> *SinsSins) : ArraySins(SinsSins), Position(0) {}
-    void FirstSin()
+    Decorator(Iterator<DS> *Iter) : SinsIterator(Iter) {}
+    virtual void FirstSin()
     {
-        Position = 0;
+        SinsIterator -> FirstSin();
     }
-    void NextSin()
+    virtual void NextSin()
     {
-        Position++;
+        SinsIterator -> NextSin();
     }
-    bool LastSin() const override
+    virtual bool LastSin() const
     {
-        return (Position >= ArraySins->Size());
+        return SinsIterator -> LastSin();
     }
-    DS GetSin() const
+    virtual DS GetSin() const
     {
-        return (ArraySins->GetSin(Position));
+        return SinsIterator -> GetSin();
     }
 };
 
-template<typename DS>
-class VectorIterator : public Iterator<DS>
+template<typename ContType, typename DS>
+class Adapter : public Iterator<DS>
 {
-private:
-    const VectorClass<DS> *VectorSins;
-    size_t Position;
+protected:
+    ContType *Container;
+    typename ContType::const_iterator Iter;
 public:
-    VectorIterator(VectorClass<DS> *SinsSins) : VectorSins(SinsSins), Position(0) {}
-    void FirstSin()
+    Adapter(ContType *container) : Container(container) {}
+    virtual void FirstSin()
     {
-        Position = 0;
+        Iter = Container->begin();
     }
-    void NextSin()
+    virtual void NextSin()
     {
-        Position++;
+        Iter++;
     }
-    bool LastSin() const
+    virtual bool LastSin() const
     {
-        return (Position >= VectorSins->Size());
+        return (Iter == Container->end());
     }
-    DS GetSin() const
+    virtual DS GetSin() const
     {
-        return (VectorSins->GetSin(Position));
+        return *Iter;
     }
 };
-
 #endif
