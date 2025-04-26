@@ -5,18 +5,86 @@
 
 using namespace std;
 
+// Лабораторная 4
+
+
+enum class PrintColourEnum : int
+{
+    Standart,
+    LazyPrint
+};
+
+class PrintColourStrat
+{
+public:
+    virtual void PrintColour2() = 0;
+};
+
+class StandartPrintColour : public PrintColourStrat
+{
+private:
+    const char* Colour;
+public:
+    StandartPrintColour(const char* colour) : Colour(colour) {};
+    void PrintColour2()
+    {
+        wcout << Colour << endl;
+    }
+};
+
+class LazyPrintColour : public PrintColourStrat
+{
+public:
+    void PrintColour2()
+    {
+        wcout << "Мне лень выводить цвет греха" << endl;
+    }
+};
+
+PrintColourStrat *CreatePrintColourStrat(PrintColourEnum printType, const char* colour)
+{
+    if (printType==PrintColourEnum::Standart)
+    {
+        return new StandartPrintColour(colour);
+    }
+    else if (printType==PrintColourEnum::LazyPrint)
+    {
+        return new LazyPrintColour;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+
+// Лабораторная 1
+
+
 class SevenDeadlySins
 {
 private:
     int Sins;
+    PrintColourStrat *PrintWithStrat;
+    void PrintColourWithStrat()
+    {
+        if (PrintWithStrat == NULL)
+        {
+            wcout << "Не выбран способ вывода цвета" << endl;
+        }
+        else
+        {
+            PrintWithStrat->PrintColour2();
+        }
+    }
 protected:
     const char* Sin;
-    const char* Colour; // Олицетворение грехов в виде цветов // Жадность - желтый, Зависть - зеленый, Гнев - красный, Лень - годубой, Похоть - розовый. Чревоугодие и Гордыня?
+    const char* Colour;
 public:
     SevenDeadlySins(const char* a, int b, const char* c);
     virtual ~SevenDeadlySins();
-    virtual void PrintSin() const;
-    void PrintColour() const;
+    void PrintSin() const;
+    void PrintColour();
     void PrintNumberOfSins() const;
     void SetSinColour(const char* a);
     const char* GetNameOfSin()
@@ -27,9 +95,14 @@ public:
     {
         return Colour;
     }
+    virtual void SetPrintColourStrat (PrintColourStrat *printWithStrat)
+    {
+        PrintWithStrat = printWithStrat;
+    }
+    virtual void PrintSinStandart() {};
 };
 
-SevenDeadlySins::SevenDeadlySins(const char* a, int b, const char* c) : Sin(a), Sins(b), Colour(c){}
+SevenDeadlySins::SevenDeadlySins(const char* a, int b, const char* c) : Sin(a), Sins(b), Colour(c), PrintWithStrat(NULL){}
 
 SevenDeadlySins::~SevenDeadlySins()
 {
@@ -38,12 +111,15 @@ SevenDeadlySins::~SevenDeadlySins()
 
 void SevenDeadlySins::PrintSin() const
 {
-    cout << "Грех:" << Sin << endl;
+    wcout << "Грех:" << Sin << endl;
 }
 
-void SevenDeadlySins::PrintColour() const
+void SevenDeadlySins::PrintColour()
 {
-    cout << "Цвет, олицетворяющий грех:" << Colour << endl;
+    wcout << "Для греха ";
+    PrintSinStandart();
+    wcout << " ассоциативный цвет - ";
+    PrintColourWithStrat();
 }
 
 void SevenDeadlySins::PrintNumberOfSins() const
@@ -65,11 +141,16 @@ public:
     ~Sloth();
     void PrintSin() const;
     void SetSinColour(const char* a);
+    void PrintSinStandart()
+    {
+        wcout << "лень";
+    }
 };
 
 Sloth::Sloth(): SevenDeadlySins("sloth", 7, "blue")
 {
     wcout << "Появляется лень..." << endl;
+    SetPrintColourStrat(CreatePrintColourStrat(PrintColourEnum::LazyPrint, Colour));
 }
 
 Sloth::~Sloth()
@@ -95,11 +176,16 @@ public:
     Wrath();
     ~Wrath();
     void PrintSin() const;
+    void PrintSinStandart()
+    {
+        wcout << Sin;
+    }
 };
 
 Wrath::Wrath(): SevenDeadlySins("wrath", 7, "red")
 {
     wcout << "Появляется злость..." << endl;
+    SetPrintColourStrat(CreatePrintColourStrat(PrintColourEnum::Standart, Colour));
 }
 
 Wrath::~Wrath()
@@ -127,6 +213,7 @@ public:
     Envy(): SevenDeadlySins("envy", 7, "green")
     {
         wcout << "Появляется зависть..." << endl;
+        SetPrintColourStrat(CreatePrintColourStrat(PrintColourEnum::Standart, Colour));
     }
     ~Envy()
     {
@@ -136,6 +223,10 @@ public:
     {
         SevenDeadlySins::PrintSin();
         wcout << "А вот другие классы реализовывались снаружи >:(" << endl;
+    }
+    void PrintSinStandart()
+    {
+        wcout << Sin;
     }
 };
 
@@ -238,6 +329,9 @@ public:
     }
 };
 
+
+
+
 int main()
 {
     setlocale(LC_ALL, "Russian");
@@ -270,20 +364,6 @@ int main()
     Iterator<SevenDeadlySins*> *sinsIter5 = new NotColourOfSinDecorator(new SecondSinDecorator(DeadlySinsArray.GetIterator()), "red");
     PrintColourIterator(sinsIter5);
     delete sinsIter5;
-    wcout << "..." << endl;
-    list<SevenDeadlySins*> DeadlySinsList;
-    for(size_t i = 0; i<7; i++)
-    {
-        int randNum = rand()%3+1;
-        DeadlySinType type = static_cast<DeadlySinType>(randNum);
-        SevenDeadlySins *newDeadlySin3 = CreateDeadlySin(type);
-        DeadlySinsList.push_back(newDeadlySin3);
-    }
-    Iterator<SevenDeadlySins*> *adaptedSinsIter = new Adapter<list<SevenDeadlySins*>, SevenDeadlySins*>(&DeadlySinsList);
-    wcout << "Обход грехов, не ассоциирующихся с зеленым цветом" << endl;
-    Iterator<SevenDeadlySins*> *sinsIter6 = new NotColourOfSinDecorator(adaptedSinsIter, "green");
-    PrintColourIterator(sinsIter6);
-    delete sinsIter6;
     return 0;
 }
 
@@ -362,3 +442,48 @@ int main()
 //    Iterator<SevenDeadlySins*> *sinsIter2 = new VectorIterator(&DeadlySinsVector);
 //    PrintColourIterator(sinsIter2);
 //    delete sinsIter2;
+
+// Лабораторная 3
+//ArrayClass<SevenDeadlySins*> DeadlySinsArray;
+//    for(size_t i = 0; i<7; i++)
+//    {
+//        int randNum = rand()%3+1;
+//        DeadlySinType type = static_cast<DeadlySinType>(randNum);
+//        SevenDeadlySins *newDeadlySin2 = CreateDeadlySin(type);
+//        DeadlySinsArray.AddAndJump(newDeadlySin2);
+//    }
+//    wcout << "Размер массива грехов: " << DeadlySinsArray.Size() << endl;
+//    wcout << "Просто итератор" << endl;
+//    Iterator<SevenDeadlySins*> *sinsIter = DeadlySinsArray.GetIterator();
+//    PrintColourIterator(sinsIter);
+//    delete sinsIter;
+//    wcout << "Обход лени" << endl;
+//    Iterator<SevenDeadlySins*> *sinsIter2 = new NameOfSinDecorator(DeadlySinsArray.GetIterator(), "sloth");
+//    PrintColourIterator(sinsIter2);
+//    delete sinsIter2;
+//    wcout << "Обход грехов, не ассоциирующихся с красным цветом" << endl;
+//    Iterator<SevenDeadlySins*> *sinsIter3 = new NotColourOfSinDecorator(DeadlySinsArray.GetIterator(), "red");
+//    PrintColourIterator(sinsIter3);
+//    delete sinsIter3;
+//     wcout << "Обход нечетных грехов" << endl;
+//    Iterator<SevenDeadlySins*> *sinsIter4 = new SecondSinDecorator(DeadlySinsArray.GetIterator());
+//    PrintColourIterator(sinsIter4);
+//    delete sinsIter4;
+//    wcout << "Обход нечетных грехов, не ассоциирующихся с красным цветом" << endl;
+//    Iterator<SevenDeadlySins*> *sinsIter5 = new NotColourOfSinDecorator(new SecondSinDecorator(DeadlySinsArray.GetIterator()), "red");
+//    PrintColourIterator(sinsIter5);
+//    delete sinsIter5;
+//    wcout << "..." << endl;
+//    list<SevenDeadlySins*> DeadlySinsList;
+//    for(size_t i = 0; i<7; i++)
+//    {
+//        int randNum = rand()%3+1;
+//        DeadlySinType type = static_cast<DeadlySinType>(randNum);
+//        SevenDeadlySins *newDeadlySin3 = CreateDeadlySin(type);
+//        DeadlySinsList.push_back(newDeadlySin3);
+//    }
+//    Iterator<SevenDeadlySins*> *adaptedSinsIter = new Adapter<list<SevenDeadlySins*>, SevenDeadlySins*>(&DeadlySinsList);
+//    wcout << "Обход грехов, не ассоциирующихся с зеленым цветом" << endl;
+//    Iterator<SevenDeadlySins*> *sinsIter6 = new NotColourOfSinDecorator(adaptedSinsIter, "green");
+//    PrintColourIterator(sinsIter6);
+//    delete sinsIter6;
